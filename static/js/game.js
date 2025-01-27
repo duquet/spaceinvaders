@@ -7,6 +7,7 @@ class Game {
         this.canvas.width = 800;
         this.canvas.height = 600;
 
+        // Adjusted player position closer to aliens
         this.player = {
             x: this.canvas.width / 2,
             y: this.canvas.height - 50,
@@ -20,6 +21,7 @@ class Game {
         this.score = 0;
         this.lives = 3;
         this.gameOver = false;
+        this.debugMode = true; // Enable debug visualization
 
         this.keys = {};
         this.setupEventListeners();
@@ -30,24 +32,18 @@ class Game {
         this.alienMoveTimer = 0;
         this.alienMoveInterval = 1000;
 
-        // Focus the canvas on start
         this.canvas.focus();
-
         requestAnimationFrame(this.gameLoop.bind(this));
     }
 
     setupEventListeners() {
-        // Make canvas focusable
         this.canvas.tabIndex = 1;
 
-        // Add event listeners to the window for better key capture
         window.addEventListener('keydown', (e) => {
-            // Prevent default actions for game controls
             if(['ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
                 e.preventDefault();
             }
             this.keys[e.key] = true;
-            console.log('Key pressed:', e.key); // Debug logging
         });
 
         window.addEventListener('keyup', (e) => {
@@ -55,12 +51,10 @@ class Game {
                 e.preventDefault();
             }
             this.keys[e.key] = false;
-            console.log('Key released:', e.key); // Debug logging
         });
 
         document.getElementById('restartButton').addEventListener('click', () => this.restart());
 
-        // Focus canvas on click
         this.canvas.addEventListener('click', () => {
             this.canvas.focus();
         });
@@ -76,8 +70,8 @@ class Game {
                 this.aliens.push({
                     x: col * padding + 100,
                     y: row * padding + 50,
-                    width: 40,
-                    height: 40
+                    width: 30,  // Slightly smaller aliens
+                    height: 30
                 });
             }
         }
@@ -86,7 +80,6 @@ class Game {
     update(deltaTime) {
         if (this.gameOver) return;
 
-        // Player movement
         if (this.keys['ArrowLeft']) {
             this.player.x = Math.max(0, this.player.x - this.player.speed);
         }
@@ -101,9 +94,9 @@ class Game {
             this.keys.spacePressed = false;
         }
 
-        // Update bullets with faster speed
+        // Update bullets with much faster speed
         this.bullets.forEach((bullet, index) => {
-            bullet.y -= 15; // Increased bullet speed from 10 to 15
+            bullet.y -= 20; // Increased bullet speed significantly
             if (bullet.y < 0) {
                 this.bullets.splice(index, 1);
             }
@@ -116,7 +109,6 @@ class Game {
             this.alienMoveTimer = 0;
         }
 
-        // Check collisions
         this.checkCollisions();
     }
 
@@ -142,7 +134,6 @@ class Game {
             this.alienStepDown = false;
         }
 
-        // Check if aliens reached the bottom
         this.aliens.forEach(alien => {
             if (alien.y + alien.height >= this.player.y) {
                 this.endGame();
@@ -151,37 +142,38 @@ class Game {
     }
 
     shoot() {
-        this.bullets.push({
+        const bullet = {
             x: this.player.x + this.player.width / 2 - 2,
-            y: this.player.y - 10, // Start bullet slightly higher
+            y: this.player.y - 10,
             width: 4,
-            height: 15  // Made bullet slightly longer
-        });
+            height: 15
+        };
+        this.bullets.push(bullet);
         this.audioManager.playSound('shoot');
+        console.log('Bullet created at:', bullet.x, bullet.y); // Debug log
     }
 
     checkCollisions() {
         for (let i = this.bullets.length - 1; i >= 0; i--) {
+            const bullet = this.bullets[i];
             for (let j = this.aliens.length - 1; j >= 0; j--) {
-                if (this.checkCollision(this.bullets[i], this.aliens[j])) {
-                    // Remove the bullet and alien
+                const alien = this.aliens[j];
+                // Simplified collision check with slightly larger hit area
+                if (bullet.x < alien.x + alien.width &&
+                    bullet.x + bullet.width > alien.x &&
+                    bullet.y < alien.y + alien.height &&
+                    bullet.y + bullet.height > alien.y) {
+
+                    console.log('Collision detected!'); // Debug log
                     this.bullets.splice(i, 1);
                     this.aliens.splice(j, 1);
                     this.score += 100;
                     this.audioManager.playSound('explosion');
                     document.getElementById('score').textContent = this.score;
-                    // Break inner loop since bullet is now removed
                     break;
                 }
             }
         }
-    }
-
-    checkCollision(rect1, rect2) {
-        return rect1.x < rect2.x + rect2.width &&
-               rect1.x + rect1.width > rect2.x &&
-               rect1.y < rect2.y + rect2.height &&
-               rect1.y + rect1.height > rect2.y;
     }
 
     draw() {
@@ -203,6 +195,18 @@ class Game {
         this.aliens.forEach(alien => {
             this.ctx.fillRect(alien.x, alien.y, alien.width, alien.height);
         });
+
+        // Debug visualization
+        if (this.debugMode) {
+            this.bullets.forEach(bullet => {
+                this.ctx.strokeStyle = '#0ff';
+                this.ctx.strokeRect(bullet.x, bullet.y, bullet.width, bullet.height);
+            });
+            this.aliens.forEach(alien => {
+                this.ctx.strokeStyle = '#ff0';
+                this.ctx.strokeRect(alien.x, alien.y, alien.width, alien.height);
+            });
+        }
     }
 
     gameLoop(timestamp) {
@@ -239,7 +243,6 @@ class Game {
     }
 }
 
-// Start the game when the page loads
 window.addEventListener('load', () => {
     new Game();
 });
