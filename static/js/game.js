@@ -3,10 +3,10 @@ class Game {
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
         this.audioManager = new AudioManager();
-        
+
         this.canvas.width = 800;
         this.canvas.height = 600;
-        
+
         this.player = {
             x: this.canvas.width / 2,
             y: this.canvas.height - 50,
@@ -14,13 +14,13 @@ class Game {
             height: 30,
             speed: 5
         };
-        
+
         this.bullets = [];
         this.aliens = [];
         this.score = 0;
         this.lives = 3;
         this.gameOver = false;
-        
+
         this.keys = {};
         this.setupEventListeners();
         this.initializeAliens();
@@ -29,14 +29,41 @@ class Game {
         this.alienStepDown = false;
         this.alienMoveTimer = 0;
         this.alienMoveInterval = 1000;
-        
+
+        // Focus the canvas on start
+        this.canvas.focus();
+
         requestAnimationFrame(this.gameLoop.bind(this));
     }
 
     setupEventListeners() {
-        window.addEventListener('keydown', (e) => this.keys[e.key] = true);
-        window.addEventListener('keyup', (e) => this.keys[e.key] = false);
+        // Make canvas focusable
+        this.canvas.tabIndex = 1;
+
+        // Add event listeners to the window for better key capture
+        window.addEventListener('keydown', (e) => {
+            // Prevent default actions for game controls
+            if(['ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+                e.preventDefault();
+            }
+            this.keys[e.key] = true;
+            console.log('Key pressed:', e.key); // Debug logging
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if(['ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+                e.preventDefault();
+            }
+            this.keys[e.key] = false;
+            console.log('Key released:', e.key); // Debug logging
+        });
+
         document.getElementById('restartButton').addEventListener('click', () => this.restart());
+
+        // Focus canvas on click
+        this.canvas.addEventListener('click', () => {
+            this.canvas.focus();
+        });
     }
 
     initializeAliens() {
