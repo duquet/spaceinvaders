@@ -70,7 +70,7 @@ class Game {
         const rows = 5;
         const cols = 10;
         const padding = 60;
-        
+
         for (let row = 0; row < rows; row++) {
             for (let col = 0; col < cols; col++) {
                 this.aliens.push({
@@ -101,9 +101,9 @@ class Game {
             this.keys.spacePressed = false;
         }
 
-        // Update bullets
+        // Update bullets with faster speed
         this.bullets.forEach((bullet, index) => {
-            bullet.y -= 10;
+            bullet.y -= 15; // Increased bullet speed from 10 to 15
             if (bullet.y < 0) {
                 this.bullets.splice(index, 1);
             }
@@ -122,26 +122,26 @@ class Game {
 
     moveAliens() {
         let touchedEdge = false;
-        
+
         this.aliens.forEach(alien => {
             if (this.alienStepDown) {
                 alien.y += 30;
             } else {
                 alien.x += 30 * this.alienDirection;
             }
-            
+
             if (alien.x <= 0 || alien.x + alien.width >= this.canvas.width) {
                 touchedEdge = true;
             }
         });
-        
+
         if (touchedEdge && !this.alienStepDown) {
             this.alienDirection *= -1;
             this.alienStepDown = true;
         } else {
             this.alienStepDown = false;
         }
-        
+
         // Check if aliens reached the bottom
         this.aliens.forEach(alien => {
             if (alien.y + alien.height >= this.player.y) {
@@ -153,25 +153,28 @@ class Game {
     shoot() {
         this.bullets.push({
             x: this.player.x + this.player.width / 2 - 2,
-            y: this.player.y,
+            y: this.player.y - 10, // Start bullet slightly higher
             width: 4,
-            height: 10
+            height: 15  // Made bullet slightly longer
         });
         this.audioManager.playSound('shoot');
     }
 
     checkCollisions() {
-        this.bullets.forEach((bullet, bulletIndex) => {
-            this.aliens.forEach((alien, alienIndex) => {
-                if (this.checkCollision(bullet, alien)) {
-                    this.bullets.splice(bulletIndex, 1);
-                    this.aliens.splice(alienIndex, 1);
+        for (let i = this.bullets.length - 1; i >= 0; i--) {
+            for (let j = this.aliens.length - 1; j >= 0; j--) {
+                if (this.checkCollision(this.bullets[i], this.aliens[j])) {
+                    // Remove the bullet and alien
+                    this.bullets.splice(i, 1);
+                    this.aliens.splice(j, 1);
                     this.score += 100;
                     this.audioManager.playSound('explosion');
                     document.getElementById('score').textContent = this.score;
+                    // Break inner loop since bullet is now removed
+                    break;
                 }
-            });
-        });
+            }
+        }
     }
 
     checkCollision(rect1, rect2) {
