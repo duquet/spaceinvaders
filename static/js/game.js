@@ -30,7 +30,7 @@ class Game {
         this.alienDirection = 1;
         this.alienStepDown = false;
         this.alienMoveTimer = 0;
-        this.alienMoveInterval = 1000;
+        this.alienMoveInterval = 1000; // Slower alien movement
 
         this.canvas.focus();
         requestAnimationFrame(this.gameLoop.bind(this));
@@ -96,7 +96,7 @@ class Game {
 
         // Update bullets with much faster speed
         this.bullets.forEach((bullet, index) => {
-            bullet.y -= 20; // Increased bullet speed significantly
+            bullet.y -= 30; // Increased bullet speed significantly
             if (bullet.y < 0) {
                 this.bullets.splice(index, 1);
             }
